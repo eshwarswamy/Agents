@@ -107,6 +107,20 @@ def send_email(subject, body):
     log.info("Email: sent")
 
 
+def build_links_section(articles):
+    by_category = {}
+    for a in articles:
+        by_category.setdefault(a["category"], []).append(a)
+
+    lines = ["\n\n--- Read More ---"]
+    for category, items in by_category.items():
+        lines.append(f"\n{category}:")
+        for a in items:
+            if a["link"]:
+                lines.append(f"  • {a['title']}\n    {a['link']}")
+    return "\n".join(lines)
+
+
 def alert_failure(error_msg):
     try:
         send_telegram(f"News Agent Failed\n{error_msg[:300]}")
@@ -125,7 +139,7 @@ def main():
     digest = summarize(articles)
     date_str = datetime.utcnow().strftime("%B %d, %Y")
     header = f"Daily News Digest — {date_str}\n\n"
-    message = header + digest
+    message = header + digest + build_links_section(articles)
 
     errors = []
 
