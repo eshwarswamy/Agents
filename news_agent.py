@@ -3,12 +3,9 @@ import feedparser
 import requests
 import smtplib
 import logging
-import json
-import hashlib
 from datetime import datetime
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-# import google.generativeai as genai
 from google import genai
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -46,59 +43,33 @@ def fetch_news():
     return articles
 
 
-# def summarize(articles):
-#     genai.configure(api_key=os.environ["GEMINI_API_KEY"])
-#     model = genai.GenerativeModel("gemini-2.0-flash")
-
-#     articles_block = "\n\n".join(
-#         f"[{a['category']}] {a['title']}\n{a['summary']}"
-#         for a in articles
-#     )
-
-#     prompt = f"""You are a news digest assistant. From the articles below create a crisp daily digest.
-
-# Format:
-# - One "Today's Highlights" paragraph (2-3 sentences, big picture)
-# - Grouped bullet points per category (2-3 bullets each, key facts only)
-# - A "Key Takeaway" sentence at the end
-
-# Limit: 450 words. Tone: professional, neutral.
-
-# Articles:
-# {articles_block}
-
-# Digest:"""
-
-#     response = model.generate_content(prompt)
-#     return response.text.strip()
-
 def summarize(articles):
-      client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+    client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 
-      articles_block = "\n\n".join(
-          f"[{a['category']}] {a['title']}\n{a['summary']}"
-          for a in articles
-      )
+    articles_block = "\n\n".join(
+        f"[{a['category']}] {a['title']}\n{a['summary']}"
+        for a in articles
+    )
 
-      prompt = f"""You are a news digest assistant. From the articles below create a crisp daily digest.
+    prompt = f"""You are a news digest assistant. From the articles below create a crisp daily digest.
 
-  Format:
-  - One "Today's Highlights" paragraph (2-3 sentences, big picture)
-  - Grouped bullet points per category (2-3 bullets each, key facts only)
-  - A "Key Takeaway" sentence at the end
+Format:
+- One "Today's Highlights" paragraph (2-3 sentences, big picture)
+- Grouped bullet points per category (2-3 bullets each, key facts only)
+- A "Key Takeaway" sentence at the end
 
-  Limit: 450 words. Tone: professional, neutral.
+Limit: 450 words. Tone: professional, neutral.
 
-  Articles:
-  {articles_block}
+Articles:
+{articles_block}
 
-  Digest:"""
+Digest:"""
 
-      response = client.models.generate_content(
-          model="gemini-2.5-flash",
-          contents=prompt,
-      )
-      return response.text.strip()
+    interaction = client.interactions.create(
+        model="gemini-3.5-flash-lite",
+        input=prompt,
+    )
+    return interaction.output_text.strip()
 
 
 def send_telegram(text):
